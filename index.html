@@ -63,6 +63,27 @@
 
     editor.addEventListener('input', updateProgress);
     goalInput.addEventListener('change', updateProgress);
+
+    // Simple password flow (for quick testing)
+document.getElementById('sendLink').onclick = async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = prompt("Create or enter a password:");
+  if (!email || !password) return;
+
+  // Try sign-in first; if it fails because user doesn't exist, sign-up
+  let { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) {
+    const res = await client.auth.signUp({ email, password });
+    if (res.error) {
+      document.getElementById('authMsg').textContent = res.error.message;
+      return;
+    }
+    document.getElementById('authMsg').textContent = "Check your email to confirm, then sign in again.";
+    return;
+  }
+  document.getElementById('authMsg').textContent = "Signed in.";
+};
+
   </script>
 </body>
 </html>

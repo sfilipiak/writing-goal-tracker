@@ -71,12 +71,11 @@
       if (!email || !password) return setMsg("Enter email and password.");
       setMsg("Creating account…");
 
-    const APP_URL = "https://sfilipiak.github.io/writing-goal-tracker/"; // <-- exact project URL
 const { error } = await client.auth.signUp({
   email,
   password,
   options: {
-    emailRedirectTo: APP_URL
+    emailRedirectTo: "https://sfilipiak.github.io/writing-goal-tracker/"
   }
 });
 

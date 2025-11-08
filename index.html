@@ -57,7 +57,8 @@
     const { createClient } = supabase;
     const SUPABASE_URL = "https://pqxubehrxqeqgevwnrqx.supabase.co"; // <-- replace me
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxeHViZWhyeHFlcWdldnducnF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDM1MTEsImV4cCI6MjA3ODExOTUxMX0.Z8QwMKIbm2lbuOFK6BbegleSdqma0mBwH4NZKS6SNVw"; // <-- replace me
-window.client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.client = client;           
 
 
     // UI elements

@@ -28,7 +28,7 @@
       <input id="password" type="password" placeholder="••••••••" style="padding:6px; width:200px" autocomplete="current-password" />
       <button id="signupBtn" style="padding:6px 10px;">Create account</button>
       <button id="loginBtn" style="padding:6px 10px;">Sign in</button>
-      <button id="logoutBtn" style="padding:6px 10px;" class="hidden">Sign out</button>
+      <button id="logoutBtn" style="padding:6px 10px;">Sign out</button>
     </div>
     <div id="authMsg" class="muted" style="margin-top:.5rem;"></div>
   </div>
@@ -103,18 +103,7 @@ const { error } = await client.auth.signUp({
       setMsg("Signed out.");
     });
 
-// Code-checking code
-    client.auth.onAuthStateChange(async (event, session) => {
-  console.log("Auth event:", event, "Session user:", session?.user);
 
-  const user = session?.user ?? null;
-  if (user) {
-    // existing code...
-  } else {
-    // existing code...
-  }
-});
-// End code-checking code
 
     
 
@@ -125,13 +114,11 @@ const { error } = await client.auth.signUp({
       if (user) {
         authBox.classList.add("hidden");
         appBox.classList.remove("hidden");
-        signOutBtn.classList.remove("hidden");
         whoami.textContent = `Signed in as ${user.email}`;
         await loadOrInitDoc(user);
       } else {
         authBox.classList.remove("hidden");
         appBox.classList.add("hidden");
-        signOutBtn.classList.add("hidden");
         whoami.textContent = "";
       }
     });

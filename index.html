@@ -19,9 +19,10 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px;" onclick="client.auth.signOut().then(()=>location.reload())">
-  Sign out
+<button id="logoutBtn" style="padding:6px 10px;" onclick="client.auth.signOut(); alert('Clicked!');">
+  Sign OUT!
 </button>
+
 
   <!-- Auth UI -->
   <div id="auth" style="margin:1rem 0; padding:.75rem; border:1px solid #ddd; border-radius:12px;">

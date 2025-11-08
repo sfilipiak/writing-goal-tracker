@@ -115,7 +115,7 @@ const { error } = await client.auth.signUp({
         authBox.classList.add("hidden");
         appBox.classList.remove("hidden");
         signOutBtn.style.display = "inline-block";
-        signOutBtn.style.display = "none";
+       
         whoami.textContent = `Signed in as ${user.email}`;
         await loadOrInitDoc(user);
       } else {

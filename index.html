@@ -28,8 +28,20 @@
       font-weight: bold;
     }
   </style>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
 </head>
+
 <body>
+  <div id="auth" style="margin:1rem 0; padding:.75rem; border:1px solid #ddd; border-radius:12px;">
+  <label>Email: </label>
+  <input id="email" type="email" placeholder="you@example.com" style="padding:6px;width:260px;">
+  <label style="margin-left:10px;">Password: </label>
+  <input id="password" type="password" placeholder="••••••••" style="padding:6px;width:200px;">
+  <button id="loginBtn" style="padding:6px 10px;margin-left:6px;">Sign in</button>
+  <span id="authMsg" style="margin-left:10px;font-size:.9rem;"></span>
+</div>
+
   <h1>Writing Goal Tracker</h1>
   <label for="goal">Word Goal:</label>
   <input type="number" id="goal" value="1000" min="1">
@@ -38,40 +50,20 @@
   <div id="message"></div>
 
   <script>
-    const editor = document.getElementById('editor');
-    const goalInput = document.getElementById('goal');
-    const progress = document.getElementById('progress');
-    const goalDisplay = document.getElementById('goalDisplay');
-    const message = document.getElementById('message');
-
-    function countWords(text) {
-      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-    }
-
-    function updateProgress() {
-      const wordGoal = parseInt(goalInput.value, 10);
-      const wordCount = countWords(editor.value);
-      goalDisplay.textContent = wordGoal;
-      progress.innerHTML = `Words: ${wordCount} / <span id="goalDisplay">${wordGoal}</span>`;
-
-      if (wordCount >= wordGoal) {
-        message.innerHTML = '<p class="complete">🎉 Goal Reached!</p>';
-      } else {
-        message.innerHTML = '';
-      }
-    }
-
-    editor.addEventListener('input', updateProgress);
-    goalInput.addEventListener('change', updateProgress);
-
-    // Simple password flow (for quick testing)
-document.getElementById('sendLink').onclick = async () => {
+    const loginBtn = document.getElementById('loginBtn');
+loginBtn.onclick = async () => {
   const email = document.getElementById('email').value.trim();
-  const password = prompt("Create or enter a password:");
-  if (!email || !password) return;
+  const password = document.getElementById('password').value;
 
-  // Try sign-in first; if it fails because user doesn't exist, sign-up
+  if (!email || !password) {
+    document.getElementById('authMsg').textContent = "Enter email and password.";
+    return;
+  }
+
+  // try sign-in first
   let { error } = await client.auth.signInWithPassword({ email, password });
+
+  // if user not found, sign them up
   if (error) {
     const res = await client.auth.signUp({ email, password });
     if (res.error) {
@@ -81,8 +73,17 @@ document.getElementById('sendLink').onclick = async () => {
     document.getElementById('authMsg').textContent = "Check your email to confirm, then sign in again.";
     return;
   }
+
   document.getElementById('authMsg').textContent = "Signed in.";
 };
+      // hide sign-in block
+client.auth.onAuthStateChange(async (_evt, session) => {
+  document.getElementById('auth').style.display = session?.user ? 'none' : 'block';
+  if (session?.user) await loadOrInitDoc(session.user);
+});
+
+
+    
 
   </script>
 </body>

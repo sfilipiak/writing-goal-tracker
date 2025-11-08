@@ -19,8 +19,8 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px;" onclick="logoutUser()">
-  Sign out, please
+<button id="logoutBtn" style="padding:6px 10px;" onclick="signOutNow()">
+  Sign out now
 </button>
 
 
@@ -220,6 +220,25 @@ async function saveDoc(userId) {
     location.reload();
   }
 }
+    async function signOutNow() {
+  try {
+    // Supabase sign out (local is enough for single tab)
+    await client.auth.signOut({ scope: 'local' });
+  } catch (e) {
+    // ignore, we'll hard-clear storage next
+  }
+
+  // HARD CLEAR any lingering Supabase session keys (belt + suspenders)
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('sb-') || k.includes('supabase.auth.token'))
+      .forEach((k) => localStorage.removeItem(k));
+  } catch (e) {}
+
+  // Reload to re-render UI as logged out
+  location.reload();
+}
+
 
   </script>
 </body>

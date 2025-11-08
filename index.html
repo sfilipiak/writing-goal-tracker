@@ -74,6 +74,8 @@
       if (!email || !password) return setMsg("Enter email and password.");
       setMsg("Creating account…");
 
+        signOutBtn.style.display = session?.user ? 'inline-block' : 'none';
+
 const { error } = await client.auth.signUp({
   email,
   password,
@@ -103,7 +105,8 @@ const { error } = await client.auth.signUp({
       setMsg("Signed out.");
     });
 
-    
+
+
     
 
     // 3) Auth state listener — toggles UI and loads doc

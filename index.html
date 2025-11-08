@@ -22,7 +22,26 @@
 <button id="logoutBtn" style="padding:6px 10px;" onclick="logout()">
   Log out
 </button>
+<!-- Test div -->
+  <div><h2>Testing</h2><button id="dbgLogoutBtn" style="padding:6px 10px;">DEBUG Sign out</button>
 
+<script>
+  // assume your client is already created and available as `client`
+  const dbgBtn = document.getElementById("dbgLogoutBtn");
+  dbgBtn.addEventListener("click", async () => {
+    console.log("Signing out clicked");
+    const { error } = await client.auth.signOut();
+    if (error) {
+      console.error("Sign out error:", error);
+      alert("Sign out error: " + error.message);
+    } else {
+      console.log("Sign out successful");
+      alert("Sign out successful");
+      location.reload();
+    }
+  });
+</script>
+</div>
 
 
   <!-- Auth UI -->

@@ -19,8 +19,9 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logout-btn">Log Out</button>
-
+<button id="logoutBtn" style="padding:6px 10px;" onclick="client.auth.signOut(); alert('Clicked!');">
+  Sign OUT!
+</button>
 
 
   <!-- Auth UI -->
@@ -53,171 +54,158 @@
   </div>
 
   <script>
-  // 1) Initialize Supabase client
-  const { createClient } = supabase;
-  const SUPABASE_URL = "https://pqxubehrxqeqgevwnrqx.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxeHViZWhyeHFlcWdldnducnF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDM1MTEsImV4cCI6MjA3ODExOTUxMX0.Z8QwMKIbm2lbuOFK6BbegleSdqma0mBwH4NZKS6SNVw";
-  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true }
-  });
-  window.client = client;
+    // 1) Initialize Supabase client (REQUIRED)
+    const { createClient } = supabase;
+    const SUPABASE_URL = "https://pqxubehrxqeqgevwnrqx.supabase.co"; // <-- replace me
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxeHViZWhyeHFlcWdldnducnF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDM1MTEsImV4cCI6MjA3ODExOTUxMX0.Z8QwMKIbm2lbuOFK6BbegleSdqma0mBwH4NZKS6SNVw"; // <-- replace me
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.client = client;           
 
-  // UI helpers
-  const el = (id) => document.getElementById(id);
-  const emailEl = el("email");
-  const pwEl = el("password");
-  const signUpBtn = el("signupBtn");
-  const signInBtn = el("loginBtn");
-  const signOutBtn = el("logoutBtn");
-  const authMsg = el("authMsg");
-  const authBox = el("auth");
-  const appBox = el("app");
-  const whoami = el("whoami");
 
-  function setMsg(m) { authMsg.textContent = m || ""; }
-  function showAppFor(user) {
-    if (user) {
-      authBox.classList.add("hidden");
-      appBox.classList.remove("hidden");
-      signOutBtn.style.display = "inline-block";
-      whoami.textContent = `Signed in as ${user.email}`;
-    } else {
-      authBox.classList.remove("hidden");
-      appBox.classList.add("hidden");
-      signOutBtn.style.display = "none";
-      whoami.textContent = "";
-    }
+    // UI elements
+    const el = (id) => document.getElementById(id);
+    const emailEl = el("email");
+    const pwEl = el("password");
+    const signUpBtn = el("signupBtn");
+    const signInBtn = el("loginBtn");
+    const signOutBtn = el("logoutBtn");
+    const authMsg = el("authMsg");
+    const authBox = el("auth");
+    const appBox = el("app");
+    const whoami = el("whoami");
+
+    // 2) Button handlers
+    signUpBtn.addEventListener("click", async () => {
+      const email = emailEl.value.trim();
+      const password = pwEl.value;
+      if (!email || !password) return setMsg("Enter email and password.");
+      setMsg("Creating account…");
+
+
+const { error } = await client.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: "https://sfilipiak.github.io/writing-goal-tracker/"
   }
+});
 
-  // 2) Button handlers
-  signUpBtn.addEventListener("click", async () => {
-    const email = emailEl.value.trim();
-    const password = pwEl.value;
-    if (!email || !password) return setMsg("Enter email and password.");
-    setMsg("Creating account…");
-
-    const { error } = await client.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: "https://sfilipiak.github.io/writing-goal-tracker/"
-      }
+      if (error) return setMsg(error.message);
+      setMsg("Account created. Check your email to confirm, then sign in.");
     });
 
-    if (error) return setMsg(error.message);
-    setMsg("Account created. Check your email to confirm, then sign in.");
-  });
+    signInBtn.addEventListener("click", async () => {
+      const email = emailEl.value.trim();
+      const password = pwEl.value;
+      if (!email || !password) return setMsg("Enter email and password.");
+      setMsg("Signing in…");
 
-  signInBtn.addEventListener("click", async () => {
-    const email = emailEl.value.trim();
-    const password = pwEl.value;
-    if (!email || !password) return setMsg("Enter email and password.");
-    setMsg("Signing in…");
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      if (error) return setMsg(error.message);
+      setMsg("Signed in.");
+      // UI will update via onAuthStateChange below
+    });
 
-    const { error } = await client.auth.signInWithPassword({ email, password });
-    if (error) return setMsg(error.message);
-    setMsg("Signed in.");
-    // UI will update via onAuthStateChange
-  });
+  
 
-  // ✅ NEW: Logout handler (no inline onclick)
-  signOutBtn.addEventListener("click", async () => {
-    setMsg("Signing out…");
-    const { error } = await client.auth.signOut();
-    if (error) return setMsg(error.message);
-    setMsg("Signed out.");
-    // UI will update via onAuthStateChange
-  });
 
-  // 3) Auth state listener — toggles UI and loads doc
-  client.auth.onAuthStateChange(async (_evt, session) => {
-    const user = session?.user ?? null;
-    showAppFor(user);
-    if (user) await loadOrInitDoc(user);
-  });
+    
+// 3) Auth state listener — toggles UI
+client.auth.onAuthStateChange(async (_evt, session) => {
+  const user = session?.user ?? null;
 
-  // ✅ NEW: Initial session on page load (so refresh shows correct UI)
-  (async () => {
-    const { data } = await client.auth.getSession();
-    const user = data.session?.user ?? null;
-    showAppFor(user);
-    if (user) await loadOrInitDoc(user);
-  })();
+  if (user) {
+    // Hide login form, show app
+    authBox.classList.add("hidden");
+    appBox.classList.remove("hidden");
 
-  // 4) Document handling (Supabase)
+    // Show logout button now that someone is logged in
+    signOutBtn.style.display = "inline-block";
+
+    whoami.textContent = `Signed in as ${user.email}`;
+    await loadOrInitDoc(user);
+  } else {
+    // Show login form, hide app
+    authBox.classList.remove("hidden");
+    appBox.classList.add("hidden");
+
+    // Hide logout button when no one is logged in
+    signOutBtn.style.display = "none";
+
+    whoami.textContent = "";
+  }
+});
+
+
+    // 4) Document handling (Supabase)
   async function loadOrInitDoc(user) {
-    const userId = user.id;
+  const userId = user.id;
 
-    // Try to fetch existing doc for this user
-    const { data, error } = await client
+  // Try to fetch existing doc for this user
+  const { data, error } = await client
+    .from("documents")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  // If none exists → create one
+  let doc = data;
+  if (!doc) {
+    const { data: newDoc, error: insertError } = await client
       .from("documents")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle(); // ← avoids throwing when no row yet
+      .insert({
+        user_id: userId,
+        content: "",
+        goal: 1000
+      })
+      .select()
+      .single();
 
-    if (error && error.code !== "PGRST116") {
-      console.error(error);
-      setMsg("Error loading document.");
-      return;
-    }
+    doc = newDoc;
+  }
 
-    let doc = data;
+  // Populate UI with values from database
+  el("goal").value = doc.goal || 1000;
+  el("goalDisplay").textContent = el("goal").value;
+  el("editor").value = doc.content || "";
+  updateCounts();
 
-    // If none exists → create one
-    if (!doc) {
-      const { data: newDoc, error: insertError } = await client
-        .from("documents")
-        .insert({ user_id: userId, content: "", goal: 1000 })
-        .select()
-        .single();
+  // Save changes to Supabase when content changes
+  el("goal").addEventListener("input", () => saveDoc(userId));
+  el("editor").addEventListener("input", () => saveDoc(userId));
+}
 
-      if (insertError) {
-        console.error(insertError);
-        setMsg("Error creating document.");
-        return;
+async function saveDoc(userId) {
+  const goal = Number(el("goal").value);
+  const content = el("editor").value;
+
+  await client
+    .from("documents")
+    .update({
+      goal: goal,
+      content: content,
+      updated_at: new Date()
+    })
+    .eq("user_id", userId);
+}
+
+
+    // 5) word counter + message
+    function updateCounts() {
+      const text = el("editor").value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      const goal = Number(el("goal").value || 0);
+      el("count").textContent = words;
+
+      const msg = el("message");
+      if (goal > 0 && words >= goal) {
+        msg.innerHTML = `<span class="complete">🎉 Goal reached!</span>`;
+      } else {
+        msg.textContent = "";
       }
-      doc = newDoc;
     }
 
-    // Populate UI
-    el("goal").value = doc.goal ?? 1000;
-    el("goalDisplay").textContent = el("goal").value;
-    el("editor").value = doc.content ?? "";
-    updateCounts();
-
-    // Save on change
-    el("goal").oninput = () => { updateCounts(); saveDoc(userId); };
-    el("editor").oninput = () => { updateCounts(); saveDoc(userId); };
-  }
-
-  async function saveDoc(userId) {
-    const goal = Number(el("goal").value);
-    const content = el("editor").value;
-
-    const { error } = await client
-      .from("documents")
-      .update({ goal, content, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-
-    if (error) console.error(error);
-  }
-
-  // 5) word counter + message
-  function updateCounts() {
-    const text = el("editor").value.trim();
-    const words = text ? text.split(/\s+/).length : 0;
-    const goal = Number(el("goal").value || 0);
-    el("count").textContent = words;
-    document.getElementById("goalDisplay").textContent = goal;
-
-    const msg = document.getElementById("message");
-    if (goal > 0 && words >= goal) {
-      msg.innerHTML = `<span class="complete">🎉 Goal reached!</span>`;
-    } else {
-      msg.textContent = "";
-    }
-  }
-</script>
-
+    function setMsg(m) { authMsg.textContent = m; }
+  </script>
 </body>
 </html>

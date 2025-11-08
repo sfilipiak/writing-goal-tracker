@@ -103,7 +103,18 @@ const { error } = await client.auth.signUp({
       setMsg("Signed out.");
     });
 
+// Code-checking code
+    client.auth.onAuthStateChange(async (event, session) => {
+  console.log("Auth event:", event, "Session user:", session?.user);
 
+  const user = session?.user ?? null;
+  if (user) {
+    // existing code...
+  } else {
+    // existing code...
+  }
+});
+// End code-checking code
 
     
 

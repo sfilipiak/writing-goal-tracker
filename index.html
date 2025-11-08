@@ -28,7 +28,8 @@
       <input id="password" type="password" placeholder="••••••••" style="padding:6px; width:200px" autocomplete="current-password" />
       <button id="signupBtn" style="padding:6px 10px;">Create account</button>
       <button id="loginBtn" style="padding:6px 10px;">Sign in</button>
-      <button id="logoutBtn" style="padding:6px 10px;">Sign out</button>
+    <button id="logoutBtn" style="padding:6px 10px;">Sign out</button>
+
     </div>
     <div id="authMsg" class="muted" style="margin-top:.5rem;"></div>
   </div>
@@ -106,24 +107,32 @@ const { error } = await client.auth.signUp({
 
 
     
+// 3) Auth state listener — toggles UI
+client.auth.onAuthStateChange(async (_evt, session) => {
+  const user = session?.user ?? null;
 
-    // 3) Auth state listener — toggles UI and loads doc
-    client.auth.onAuthStateChange(async (_evt, session) => {
-      const user = session?.user ?? null;
+  if (user) {
+    // Hide login form, show app
+    authBox.classList.add("hidden");
+    appBox.classList.remove("hidden");
 
-      if (user) {
-        authBox.classList.add("hidden");
-        appBox.classList.remove("hidden");
-        signOutBtn.style.display = "inline-block";
-       
-        whoami.textContent = `Signed in as ${user.email}`;
-        await loadOrInitDoc(user);
-      } else {
-        authBox.classList.remove("hidden");
-        appBox.classList.add("hidden");
-        whoami.textContent = "";
-      }
-    });
+    // Show logout button now that someone is logged in
+    signOutBtn.style.display = "inline-block";
+
+    whoami.textContent = `Signed in as ${user.email}`;
+    await loadOrInitDoc(user);
+  } else {
+    // Show login form, hide app
+    authBox.classList.remove("hidden");
+    appBox.classList.add("hidden");
+
+    // Hide logout button when no one is logged in
+    signOutBtn.style.display = "none";
+
+    whoami.textContent = "";
+  }
+});
+
 
     // 4) Document handling (Supabase)
   async function loadOrInitDoc(user) {

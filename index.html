@@ -19,8 +19,8 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px;" onclick="signOutNow()">
-  Sign out now
+<button id="logoutBtn" style="padding:6px 10px; display:none;">
+  Sign OUT
 </button>
 
 
@@ -70,6 +70,8 @@
     const signUpBtn = el("signupBtn");
     const signInBtn = el("loginBtn");
     const signOutBtn = el("logoutBtn");
+    signOutBtn.addEventListener("click", signOutNow);
+
     const authMsg = el("authMsg");
     const authBox = el("auth");
     const appBox = el("app");

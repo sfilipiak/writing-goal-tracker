@@ -71,14 +71,14 @@
       if (!email || !password) return setMsg("Enter email and password.");
       setMsg("Creating account…");
 
-      const { error } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          // This is where Supabase will send users after clicking the confirm link.
-          emailRedirectTo: window.location.origin
-        }
-      });
+    const APP_URL = "https://sfilipiak.github.io/writing-goal-tracker/"; // <-- exact project URL
+const { error } = await client.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: APP_URL
+  }
+});
 
       if (error) return setMsg(error.message);
       setMsg("Account created. Check your email to confirm, then sign in.");

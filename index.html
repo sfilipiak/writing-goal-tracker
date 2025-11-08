@@ -20,7 +20,7 @@
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
 <button id="logoutBtn" style="padding:6px 10px;" onclick="logout()">
-  Log out
+  Log out!
 </button>
 <!-- Test div -->
   <div><h2>Testing</h2><button id="dbgLogoutBtn" style="padding:6px 10px;">DEBUG Sign out</button>
@@ -115,6 +115,29 @@ window.logout = async function () {
     const authBox = el("auth");
     const appBox = el("app");
     const whoami = el("whoami");
+
+    // --- LOGOUT HANDLER (Put this right after the element declarations) ---
+console.log("Logout button element is:", signOutBtn);
+
+if (signOutBtn) {
+  signOutBtn.addEventListener("click", async () => {
+    console.log("Logout clicked!");
+
+    const { error } = await client.auth.signOut(); // Logs out from Supabase
+    if (error) {
+      console.error("SignOut error:", error.message);
+      alert("Error signing out: " + error.message);
+      return;
+    }
+
+    console.log("Signed out successfully");
+    alert("Signed out!");
+    location.reload(); // Reload the app so UI resets to login screen
+  });
+} else {
+  console.error("Logout button NOT FOUND in DOM");
+}
+
 
     // 2) Button handlers
     signUpBtn.addEventListener("click", async () => {

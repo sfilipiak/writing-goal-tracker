@@ -223,21 +223,32 @@ async function saveDoc(userId) {
 
 
     // 5) word counter + message
-    function updateCounts() {
-      const text = el("editor").value.trim();
-      const words = text ? text.split(/\s+/).length : 0;
-      const goal = Number(el("goal").value || 0);
-      el("count").textContent = words;
+    const editor = document.getElementById('editor');
+    const goalInput = document.getElementById('goal');
+    const progress = document.getElementById('progress');
+    const goalDisplay = document.getElementById('goalDisplay');
+    const message = document.getElementById('message');
 
-      const msg = el("message");
-      if (goal > 0 && words >= goal) {
-        msg.innerHTML = `<span class="complete">🎉 Goal reached!</span>`;
+    function countWords(text) {
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    function updateProgress() {
+      const wordGoal = parseInt(goalInput.value, 10);
+      const wordCount = countWords(editor.value);
+      goalDisplay.textContent = wordGoal;
+      progress.innerHTML = `Words: ${wordCount} / <span id="goalDisplay">${wordGoal}</span>`;
+
+      if (wordCount >= wordGoal) {
+        message.innerHTML = '<p class="complete">🎉 Goal Reached!</p>';
       } else {
-        msg.textContent = "";
+        message.innerHTML = '';
       }
     }
 
-    function setMsg(m) { authMsg.textContent = m; }
+    editor.addEventListener('input', updateProgress);
+    goalInput.addEventListener('change', updateProgress);
+
 
     
   </script>

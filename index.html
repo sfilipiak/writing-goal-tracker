@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+x<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -19,8 +19,8 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px; display:none;">
-  Sign OUT
+<button id="logoutBtn" style="padding:6px 10px;">
+  *Sign out*
 </button>
 
 
@@ -222,24 +222,23 @@ async function saveDoc(userId) {
     location.reload();
   }
 }
-    async function signOutNow() {
-  try {
-    // Supabase sign out (local is enough for single tab)
-    await client.auth.signOut({ scope: 'local' });
-  } catch (e) {
-    // ignore, we'll hard-clear storage next
-  }
+   
 
-  // HARD CLEAR any lingering Supabase session keys (belt + suspenders)
-  try {
-    Object.keys(localStorage)
-      .filter((k) => k.startsWith('sb-') || k.includes('supabase.auth.token'))
-      .forEach((k) => localStorage.removeItem(k));
-  } catch (e) {}
 
-  // Reload to re-render UI as logged out
-  location.reload();
-}
+
+    // new logout function
+    // Logout logic
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+    } else {
+      console.log("Signed out successfully");
+      // Optional: redirect or refresh page
+      window.location.reload(); 
+      // or window.location.href = "/index.html";
+    }
+  });
 
 
   </script>

@@ -33,7 +33,6 @@
     <div id="authMsg" class="muted" style="margin-top:.5rem;"></div>
   </div>
 
-  <button id="logoutBtn" style="padding:6px 10px;" class="hidden">Sign out</button>
 
 
   <!-- App UI -->
@@ -74,7 +73,6 @@
       if (!email || !password) return setMsg("Enter email and password.");
       setMsg("Creating account…");
 
-        signOutBtn.style.display = session?.user ? 'inline-block' : 'none';
 
 const { error } = await client.auth.signUp({
   email,

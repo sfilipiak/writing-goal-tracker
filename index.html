@@ -19,8 +19,8 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px;" onclick="client.auth.signOut(); alert('Clicked!');">
-  Sign OUT!
+<button id="logoutBtn" style="padding:6px 10px; display:none;">
+  Sign out?
 </button>
 
 
@@ -106,7 +106,17 @@ const { error } = await client.auth.signUp({
       // UI will update via onAuthStateChange below
     });
 
-  
+  // Force a clean sign-out on click (global + clear local keys), then reload
+signOutBtn.addEventListener("click", async () => {
+  try { await client.auth.signOut({ scope: 'global' }); } catch (_) {}
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('sb-') || k.includes('supabase.auth.token'))
+      .forEach(k => localStorage.removeItem(k));
+  } catch (_) {}
+  location.reload();
+});
+
 
 
     
@@ -206,6 +216,8 @@ async function saveDoc(userId) {
     }
 
     function setMsg(m) { authMsg.textContent = m; }
+
+    
   </script>
 </body>
 </html>

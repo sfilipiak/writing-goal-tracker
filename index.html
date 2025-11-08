@@ -33,6 +33,9 @@
     <div id="authMsg" class="muted" style="margin-top:.5rem;"></div>
   </div>
 
+  <button id="logoutBtn" style="padding:6px 10px;" class="hidden">Sign out</button>
+
+
   <!-- App UI -->
   <div id="app" class="hidden">
     <div class="muted" id="whoami"></div>
@@ -99,6 +102,9 @@ const { error } = await client.auth.signUp({
       await client.auth.signOut();
       setMsg("Signed out.");
     });
+
+    
+    
 
     // 3) Auth state listener — toggles UI and loads doc
     client.auth.onAuthStateChange(async (_evt, session) => {

@@ -19,9 +19,10 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px; display:none;">
-  Sign out!
+<button id="logoutBtn" style="padding:6px 10px;" onclick="logout()">
+  Log out
 </button>
+
 
 
   <!-- Auth UI -->
@@ -61,16 +62,16 @@
     const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.client = client;           
 
-    // Logout that always works, even if the network call fails
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+   // One-shot, belt+braces logout that always clears local session
+window.logout = async function () {
   try {
-    // Clear Supabase session locally (fast + reliable)
+    // Clear this tab's session (no network/CORS involved)
     await client.auth.signOut({ scope: 'local' });
   } catch (e) {
     // ignore
   }
 
-  // Belt & suspenders: purge any lingering Supabase auth keys
+  // Hard-clear any lingering Supabase tokens in localStorage
   try {
     Object.keys(localStorage)
       .filter(k => k.startsWith('sb-') || k.includes('supabase.auth.token'))
@@ -79,9 +80,9 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     // ignore
   }
 
-  // Hard reload the same page (works on GitHub Pages)
-  location.replace(location.origin + location.pathname);
-});
+  // Reload to re-render the UI as logged-out
+  location.reload();
+};
 
 
     // UI elements

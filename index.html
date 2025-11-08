@@ -19,9 +19,10 @@
 <body>
   <h1>Writing Goal Tracker</h1>
   <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px;" onclick="client.auth.signOut(); alert('Clicked!');">
-  Sign OUT!
+<button id="logoutBtn" style="padding:6px 10px;" onclick="logoutUser()">
+  Sign out, please
 </button>
+
 
 
   <!-- Auth UI -->
@@ -206,6 +207,20 @@ async function saveDoc(userId) {
     }
 
     function setMsg(m) { authMsg.textContent = m; }
+
+    async function logoutUser() {
+  const { error } = await client.auth.signOut();
+  if (error) {
+    alert('Error signing out: ' + error.message);
+  } else {
+    // Optional: clear saved data in the UI
+    document.getElementById('editor').value = '';
+    document.getElementById('whoami').textContent = '';
+    // Force refresh the page to show login form again
+    location.reload();
+  }
+}
+
   </script>
 </body>
 </html>

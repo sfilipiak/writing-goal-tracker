@@ -7,293 +7,140 @@
   <style>
     body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 1rem; }
     #editor { width: 100%; height: 300px; padding: 1rem; font-size: 1rem; line-height: 1.6; border: 1px solid #ccc; resize: vertical; }
-    #progress { margin-top: 1rem; }
-    .complete { color: green; font-weight: 600; }
+    .hidden { display: none; }
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .muted { color:#666; font-size:.9rem; }
-    .hidden { display:none; }
+    #progress { margin-top: 1rem; }
   </style>
-  <!-- Supabase JS v2 (CDN) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <h1>Writing Goal Tracker</h1>
-  <p>Testing some copy on this page</p>
-<button id="logoutBtn" style="padding:6px 10px;" onclick="logout()">
-  Log out!
-</button>
-<!-- Test div -->
-  <div><h2>Testing</h2><button id="dbgLogoutBtn" style="padding:6px 10px;">DEBUG Sign out</button>
 
-<script>
-  // assume your client is already created and available as `client`
-  const dbgBtn = document.getElementById("dbgLogoutBtn");
-  dbgBtn.addEventListener("click", async () => {
-    console.log("Signing out clicked");
-    const { error } = await client.auth.signOut();
-    if (error) {
-      console.error("Sign out error:", error);
-      alert("Sign out error: " + error.message);
-    } else {
-      console.log("Sign out successful");
-      alert("Sign out successful");
-      location.reload();
-    }
-  });
-</script>
-</div>
+  <!-- Logout button (visible only when logged in) -->
+  <button id="logoutBtn" class="hidden" style="padding:6px 10px;">Sign out</button>
 
-
-  <!-- Auth UI -->
-  <div id="auth" style="margin:1rem 0; padding:.75rem; border:1px solid #ddd; border-radius:12px;">
+  <!-- Login / Signup -->
+  <div id="authBox">
     <div class="row">
-      <label for="email">Email:</label>
-      <input id="email" type="email" placeholder="you@example.com" style="padding:6px; width:260px" autocomplete="username" />
-      <label for="password">Password:</label>
-      <input id="password" type="password" placeholder="••••••••" style="padding:6px; width:200px" autocomplete="current-password" />
-      <button id="signupBtn" style="padding:6px 10px;">Create account</button>
-      <button id="loginBtn" style="padding:6px 10px;">Sign in</button>
-
-
+      <input id="email" type="email" placeholder="you@example.com" />
+      <input id="password" type="password" placeholder="Password" />
+      <button id="signupBtn">Create account</button>
+      <button id="loginBtn">Sign in</button>
     </div>
-    <div id="authMsg" class="muted" style="margin-top:.5rem;"></div>
+    <div id="authMsg" style="color:#555; margin-top:.5rem;"></div>
   </div>
 
-
-
-  <!-- App UI -->
-  <div id="app" class="hidden">
-    <div class="muted" id="whoami"></div>
-    <div style="margin:.5rem 0 1rem;">
-      <label for="goal">Word Goal:</label>
-      <input type="number" id="goal" value="1000" min="1" />
-    </div>
+  <!-- App Interface -->
+  <div id="appBox" class="hidden">
+    <div id="whoami" style="margin-bottom:10px;"></div>
+    <label>Word Goal: <input type="number" id="goal" value="1000" min="1" /></label>
+    <br><br>
     <textarea id="editor" placeholder="Start writing..."></textarea>
     <div id="progress">Words: <span id="count">0</span> / <span id="goalDisplay">1000</span></div>
     <div id="message"></div>
   </div>
 
-  <script>
-    // 1) Initialize Supabase client (REQUIRED)
-    const { createClient } = supabase;
-    const SUPABASE_URL = "https://pqxubehrxqeqgevwnrqx.supabase.co"; // <-- replace me
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxeHViZWhyeHFlcWdldnducnF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDM1MTEsImV4cCI6MjA3ODExOTUxMX0.Z8QwMKIbm2lbuOFK6BbegleSdqma0mBwH4NZKS6SNVw"; // <-- replace me
-    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.client = client;           
+<script>
+/* 1. Supabase Setup */
+const { createClient } = supabase;
+const client = createClient(
+  "https://pqxubehrxqeqgevwnrqx.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxeHViZWhyeHFlcWdldnducnF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDM1MTEsImV4cCI6MjA3ODExOTUxMX0.Z8QwMKIbm2lbuOFK6BbegleSdqma0mBwH4NZKS6SNVw"
+);
 
-   // One-shot, belt+braces logout that always clears local session
-window.logout = async function () {
-  try {
-    // Clear this tab's session (no network/CORS involved)
-    await client.auth.signOut({ scope: 'local' });
-  } catch (e) {
-    // ignore
-  }
+/* 2. UI Elements */
+const emailEl = document.getElementById("email");
+const pwEl = document.getElementById("password");
+const signupBtn = document.getElementById("signupBtn");
+const loginBtn = document.getElementById("loginBtn");
+const authMsg = document.getElementById("authMsg");
+const authBox = document.getElementById("authBox");
+const appBox = document.getElementById("appBox");
+const logoutBtn = document.getElementById("logoutBtn");
+const whoami = document.getElementById("whoami");
 
-  // Hard-clear any lingering Supabase tokens in localStorage
-  try {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('sb-') || k.includes('supabase.auth.token'))
-      .forEach(k => localStorage.removeItem(k));
-  } catch (e) {
-    // ignore
-  }
+/* 3. Sign Up / Sign In */
+function setMsg(msg) { authMsg.textContent = msg || ""; }
 
-  // Reload to re-render the UI as logged-out
-  location.reload();
-};
-
-
-    // UI elements
-    const el = (id) => document.getElementById(id);
-    const emailEl = el("email");
-    const pwEl = el("password");
-    const signUpBtn = el("signupBtn");
-    const signInBtn = el("loginBtn");
-    const signOutBtn = el("logoutBtn");
-    const authMsg = el("authMsg");
-    const authBox = el("auth");
-    const appBox = el("app");
-    const whoami = el("whoami");
-
-    // --- LOGOUT HANDLER (Put this right after the element declarations) ---
-console.log("Logout button element is:", signOutBtn);
-
-if (signOutBtn) {
-  signOutBtn.addEventListener("click", async () => {
-    console.log("Logout clicked!");
-
-    const { error } = await client.auth.signOut(); // Logs out from Supabase
-    if (error) {
-      console.error("SignOut error:", error.message);
-      alert("Error signing out: " + error.message);
-      return;
-    }
-
-    console.log("Signed out successfully");
-    alert("Signed out!");
-    location.reload(); // Reload the app so UI resets to login screen
+signupBtn.addEventListener("click", async () => {
+  const email = emailEl.value;
+  const password = pwEl.value;
+  const { error } = await client.auth.signUp({
+    email, password,
+    options: { emailRedirectTo: "https://sfilipiak.github.io/writing-goal-tracker/" }
   });
-} else {
-  console.error("Logout button NOT FOUND in DOM");
-}
-
-
-    // 2) Button handlers
-    signUpBtn.addEventListener("click", async () => {
-      const email = emailEl.value.trim();
-      const password = pwEl.value;
-      if (!email || !password) return setMsg("Enter email and password.");
-      setMsg("Creating account…");
-
-
-const { error } = await client.auth.signUp({
-  email,
-  password,
-  options: {
-    emailRedirectTo: "https://sfilipiak.github.io/writing-goal-tracker/"
-  }
+  setMsg(error ? error.message : "Check your email to confirm.");
 });
 
-      if (error) return setMsg(error.message);
-      setMsg("Account created. Check your email to confirm, then sign in.");
-    });
-
-    signInBtn.addEventListener("click", async () => {
-      const email = emailEl.value.trim();
-      const password = pwEl.value;
-      if (!email || !password) return setMsg("Enter email and password.");
-      setMsg("Signing in…");
-
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) return setMsg(error.message);
-      setMsg("Signed in.");
-      // UI will update via onAuthStateChange below
-    });
-
-  // Force a clean sign-out on click (global + clear local keys), then reload
-signOutBtn.addEventListener("click", async () => {
-  try { await client.auth.signOut({ scope: 'global' }); } catch (_) {}
-  try {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('sb-') || k.includes('supabase.auth.token'))
-      .forEach(k => localStorage.removeItem(k));
-  } catch (_) {}
-  location.reload();
+loginBtn.addEventListener("click", async () => {
+  const { error } = await client.auth.signInWithPassword({
+    email: emailEl.value,
+    password: pwEl.value
+  });
+  setMsg(error ? error.message : "Signed in.");
 });
 
+/* 4. Logout */
+logoutBtn.addEventListener("click", async () => {
+  await client.auth.signOut();
+  location.reload(); // force UI reset
+});
 
-
-    
-// 3) Auth state listener — toggles UI
-client.auth.onAuthStateChange(async (_evt, session) => {
-  const user = session?.user ?? null;
-
+/* 5. Auth State Changes */
+client.auth.onAuthStateChange(async (_event, session) => {
+  const user = session?.user;
   if (user) {
-    // Hide login form, show app
     authBox.classList.add("hidden");
     appBox.classList.remove("hidden");
-
-    // Show logout button now that someone is logged in
-    signOutBtn.style.display = "inline-block";
-
+    logoutBtn.classList.remove("hidden");
     whoami.textContent = `Signed in as ${user.email}`;
-    await loadOrInitDoc(user);
+    loadDoc(user);
   } else {
-    // Show login form, hide app
     authBox.classList.remove("hidden");
     appBox.classList.add("hidden");
-
-    // Hide logout button when no one is logged in
-    signOutBtn.style.display = "none";
-
-    whoami.textContent = "";
+    logoutBtn.classList.add("hidden");
   }
 });
 
-
-    // 4) Document handling (Supabase)
-  async function loadOrInitDoc(user) {
-  const userId = user.id;
-
-  // Try to fetch existing doc for this user
-  const { data, error } = await client
+/* 6. Load or Create Document */
+async function loadDoc(user) {
+  const { data: doc } = await client
     .from("documents")
     .select("*")
-    .eq("user_id", userId)
-    .single();
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  // If none exists → create one
-  let doc = data;
   if (!doc) {
-    const { data: newDoc, error: insertError } = await client
-      .from("documents")
-      .insert({
-        user_id: userId,
-        content: "",
-        goal: 1000
-      })
-      .select()
-      .single();
-
-    doc = newDoc;
+    await client.from("documents").insert({ user_id: user.id, content: "", goal: 1000 });
   }
 
-  // Populate UI with values from database
-  el("goal").value = doc.goal || 1000;
-  el("goalDisplay").textContent = el("goal").value;
-  el("editor").value = doc.content || "";
+  document.getElementById("goal").value = doc?.goal ?? 1000;
+  document.getElementById("goalDisplay").textContent = doc?.goal ?? 1000;
+  document.getElementById("editor").value = doc?.content ?? "";
   updateCounts();
 
-  // Save changes to Supabase when content changes
-  el("goal").addEventListener("input", () => saveDoc(userId));
-  el("editor").addEventListener("input", () => saveDoc(userId));
+  document.getElementById("editor").oninput = () => saveDoc(user);
+  document.getElementById("goal").oninput = () => saveDoc(user);
 }
 
-async function saveDoc(userId) {
-  const goal = Number(el("goal").value);
-  const content = el("editor").value;
-
-  await client
-    .from("documents")
+/* 7. Save Doc */
+async function saveDoc(user) {
+  await client.from("documents")
     .update({
-      goal: goal,
-      content: content,
-      updated_at: new Date()
+      content: document.getElementById("editor").value,
+      goal: Number(document.getElementById("goal").value)
     })
-    .eq("user_id", userId);
+    .eq("user_id", user.id);
 }
 
-
-    // 5) word counter + message
-    const editor = document.getElementById('editor');
-    const goalInput = document.getElementById('goal');
-    const progress = document.getElementById('progress');
-    const goalDisplay = document.getElementById('goalDisplay');
-    const message = document.getElementById('message');
-
-    function countWords(text) {
-      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-    }
-
-    function updateProgress() {
-      const wordGoal = parseInt(goalInput.value, 10);
-      const wordCount = countWords(editor.value);
-      goalDisplay.textContent = wordGoal;
-      progress.innerHTML = `Words: ${wordCount} / <span id="goalDisplay">${wordGoal}</span>`;
-
-      if (wordCount >= wordGoal) {
-        message.innerHTML = '<p class="complete">🎉 Goal Reached!</p>';
-      } else {
-        message.innerHTML = '';
-      }
-    }
-
-    editor.addEventListener('input', updateProgress);
-    goalInput.addEventListener('change', updateProgress);
-
-
-    
-  </script>
+/* 8. Word Counter */
+function updateCounts() {
+  const text = document.getElementById("editor").value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  document.getElementById("count").textContent = words;
+  const goal = Number(document.getElementById("goal").value || 0);
+  document.getElementById("goalDisplay").textContent = goal;
+}
+</script>
 </body>
 </html>

@@ -118,30 +118,58 @@ const { error } = await client.auth.signUp({
       }
     });
 
-    // 4) Minimal “document” handling (localStorage demo)
-    // You can later persist to Supabase (e.g., a table) once auth works.
-    async function loadOrInitDoc(user) {
-      // restore goal & text from localStorage (keyed by user id)
-      const keyPrefix = `wgt:${user.id}:`;
-      const savedGoal = localStorage.getItem(keyPrefix + "goal");
-      const savedText = localStorage.getItem(keyPrefix + "text");
-      el("goal").value = savedGoal ? Number(savedGoal) : 1000;
-      el("goalDisplay").textContent = el("goal").value;
-      el("editor").value = savedText || "";
-      updateCounts();
+    // 4) Document handling (Supabase)
+  async function loadOrInitDoc(user) {
+  const userId = user.id;
 
-      // save on changes
-      el("goal").addEventListener("input", () => {
-        localStorage.setItem(keyPrefix + "goal", el("goal").value);
-        el("goalDisplay").textContent = el("goal").value;
-        updateCounts();
-      });
+  // Try to fetch existing doc for this user
+  const { data, error } = await client
+    .from("documents")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
-      el("editor").addEventListener("input", () => {
-        localStorage.setItem(keyPrefix + "text", el("editor").value);
-        updateCounts();
-      });
-    }
+  // If none exists → create one
+  let doc = data;
+  if (!doc) {
+    const { data: newDoc, error: insertError } = await client
+      .from("documents")
+      .insert({
+        user_id: userId,
+        content: "",
+        goal: 1000
+      })
+      .select()
+      .single();
+
+    doc = newDoc;
+  }
+
+  // Populate UI with values from database
+  el("goal").value = doc.goal || 1000;
+  el("goalDisplay").textContent = el("goal").value;
+  el("editor").value = doc.content || "";
+  updateCounts();
+
+  // Save changes to Supabase when content changes
+  el("goal").addEventListener("input", () => saveDoc(userId));
+  el("editor").addEventListener("input", () => saveDoc(userId));
+}
+
+async function saveDoc(userId) {
+  const goal = Number(el("goal").value);
+  const content = el("editor").value;
+
+  await client
+    .from("documents")
+    .update({
+      goal: goal,
+      content: content,
+      updated_at: new Date()
+    })
+    .eq("user_id", userId);
+}
+
 
     // 5) word counter + message
     function updateCounts() {
